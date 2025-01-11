@@ -1,16 +1,16 @@
-name: Create Release on Merge to Main
+name: Create Release for Pull Request
 
 on:
   pull_request:
     types:
-      - closed  # Trigger when the pull request is closed
+      - opened  # Trigger when a pull request is opened
+      - closed  # Trigger when a pull request is closed
     branches:
       - main    # Only trigger for pull requests targeting the main branch
 
 jobs:
-  create-release:
-    name: Create Release
-    if: github.event.pull_request.merged == true  # Only run if the PR is merged
+  handle-release:
+    name: Handle Release
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +36,7 @@ jobs:
         echo "New tag is: ${NEW_TAG}"
 
     - name: Push New Tag
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -44,7 +45,24 @@ jobs:
         git tag ${{ env.NEW_TAG }}
         git push origin ${{ env.NEW_TAG }}
 
-    - name: Create Release
+    - name: Create Pre-Release for Opened PR
+      if: github.event.action == 'opened'
+      id: create_pre_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ env.NEW_TAG }}
+        release_name: "Pre-Release ${{ env.NEW_TAG }}"
+        body: |
+          ### Pre-Release for Pull Request
+          - Pull request title: ${{ github.event.pull_request.title }}
+          - Created by: ${{ github.event.pull_request.user.login }}
+        draft: false
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Full Release for Merged PR
+      if: github.event.action == 'closed' && github.event.pull_request.merged == true
       id: create_release
       uses: actions/create-release@v1
       with:
