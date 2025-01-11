@@ -1,11 +1,13 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
-import random, pickle, json
+import random
+import pickle
+import json
 from sqlite3 import connect
 from datetime import timedelta, date
 from sklearn.linear_model import LogisticRegression
-from scipy.stats import norm, expon, uniform, skewnorm
+from scipy.stats import norm, expon, skewnorm
 
 
 cwd = Path('.').resolve()

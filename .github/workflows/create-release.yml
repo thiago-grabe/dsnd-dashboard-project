@@ -1,0 +1,56 @@
+name: Create Release on Merge to Main
+
+on:
+  pull_request:
+    types:
+      - closed  # Trigger when the pull request is closed
+    branches:
+      - main    # Only trigger for pull requests targeting the main branch
+
+jobs:
+  create-release:
+    name: Create Release
+    if: github.event.pull_request.merged == true  # Only run if the PR is merged
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get the Latest Tag
+      id: get_tag
+      run: |
+        # Get the latest tag or default to 0.0.0
+        echo "CURRENT_TAG=$(git describe --tags --abbrev=0 || echo 'v0.0.0')" >> $GITHUB_ENV
+        echo "echo ${CURRENT_TAG}"
+
+    - name: Calculate New Tag
+      id: new_tag
+      run: |
+        # Extract major, minor, and patch from the current tag
+        IFS='.' read -r major minor patch <<< "${CURRENT_TAG#v}"
+        # Increment the patch version
+        new_patch=$((patch + 1))
+        # Set the new tag
+        echo "NEW_TAG=v$major.$minor.$new_patch" >> $GITHUB_ENV
+        echo "New tag: ${NEW_TAG}"
+
+    - name: Push New Tag
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag ${{ env.NEW_TAG }}
+        git push origin ${{ env.NEW_TAG }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ env.NEW_TAG }}
+        release_name: "Release ${{ env.NEW_TAG }}"
+        body: |
+          ### What's New in Version ${{ env.NEW_TAG }}
+          - Merged pull request: ${{ github.event.pull_request.title }}
+          - Changes made by: ${{ github.event.pull_request.user.login }}
+        draft: false
+        prerelease: false
