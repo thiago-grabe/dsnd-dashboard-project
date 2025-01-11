@@ -19,7 +19,7 @@ class Employee(QueryBase):
             the full name and ID of an employee.
         """
 
-        sql_query = f"""
+        sql_query = """
                        SELECT first_name || ' ' || last_name AS full_name, employee_id
                        FROM employee
                 """
