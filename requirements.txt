@@ -4,4 +4,4 @@ matplotlib==3.9.2
 scipy==1.14.1
 numpy==2.1.2
 pandas==2.2.3
-#### Add text to install the python-package here
+sqlite_minutils==4.0.3
