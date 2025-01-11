@@ -3,10 +3,10 @@ name: Create Release for Pull Request
 on:
   pull_request:
     types:
-      - opened  # Trigger when a pull request is opened
-      - closed  # Trigger when a pull request is closed
+      - opened
+      - closed
     branches:
-      - main    # Only trigger for pull requests targeting the main branch
+      - main
 
 jobs:
   handle-release:
@@ -20,19 +20,17 @@ jobs:
     - name: Get the Latest Tag
       id: get_tag
       run: |
-        # Get the latest tag or default to 0.0.0 if no tags exist
         echo "CURRENT_TAG=$(git describe --tags --abbrev=0 || echo 'v0.0.0')" >> $GITHUB_ENV
         echo "Current tag is: ${CURRENT_TAG}"
 
     - name: Calculate New Tag
       id: new_tag
       run: |
-        # Extract major, minor, and patch from the current tag
         IFS='.' read -r major minor patch <<< "${CURRENT_TAG#v}"
-        # Increment the patch version
-        new_patch=$((patch + 1))
-        # Set the new tag
-        echo "NEW_TAG=v$major.$minor.$new_patch" >> $GITHUB_ENV
+        while git ls-remote --tags origin | grep -q "refs/tags/v$major.$minor.$patch"; do
+          patch=$((patch + 1))
+        done
+        echo "NEW_TAG=v$major.$minor.$patch" >> $GITHUB_ENV
         echo "New tag is: ${NEW_TAG}"
 
     - name: Push New Tag
