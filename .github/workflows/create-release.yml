@@ -20,9 +20,9 @@ jobs:
     - name: Get the Latest Tag
       id: get_tag
       run: |
-        # Get the latest tag or default to 0.0.0
+        # Get the latest tag or default to 0.0.0 if no tags exist
         echo "CURRENT_TAG=$(git describe --tags --abbrev=0 || echo 'v0.0.0')" >> $GITHUB_ENV
-        echo "echo ${CURRENT_TAG}"
+        echo "Current tag is: ${CURRENT_TAG}"
 
     - name: Calculate New Tag
       id: new_tag
@@ -33,9 +33,11 @@ jobs:
         new_patch=$((patch + 1))
         # Set the new tag
         echo "NEW_TAG=v$major.$minor.$new_patch" >> $GITHUB_ENV
-        echo "New tag: ${NEW_TAG}"
+        echo "New tag is: ${NEW_TAG}"
 
     - name: Push New Tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
@@ -54,3 +56,5 @@ jobs:
           - Changes made by: ${{ github.event.pull_request.user.login }}
         draft: false
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
